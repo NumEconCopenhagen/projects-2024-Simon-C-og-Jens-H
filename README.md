@@ -1,4 +1,4 @@
-# $imon og Jen$
+# Simon og Jens
 
 Group members:
 1. Simon (zth948)
