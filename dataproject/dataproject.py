@@ -1,1 +1,1 @@
-filename = 'data/sport2.csv'
+filename = 'data/sport.csv'
