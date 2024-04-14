@@ -5,4 +5,5 @@ Group members:
 2. Jens (pwt169)
 
 This repositary contains:
-  a. inagural project
+1. inaguralproject
+2. dataproject
