@@ -7,3 +7,4 @@ Group members:
 This repositary contains:
 1. inaguralproject
 2. dataproject
+3. modelproject
