@@ -26,13 +26,14 @@ class modelclass():
 
         par = self.par
 
+
         # a. Household parameters 
-        par.rho = 0.03 # discount rate 
-        par.n = 0.05 # population growth 
+        par.rho = 0.05 # discount rate 
+        par.n = 0.04 # population growth 
 
         # b. Firms parameters 
         par.p_f = 'cobb-douglas' # production function 
-        par.alpha = 0.3 # percentage of capital the consumer uses in their production process 
+        par.alpha = 1/3 # percentage of capital the consumer uses in their production process 
 
         # c. Government parameters 
         par.tau = 0.0 # wage tax
