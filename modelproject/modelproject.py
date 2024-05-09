@@ -63,11 +63,11 @@ class modelclass():
         par = self.par
         sim = self.sim
 
-        # b. Initial values for simulation 
+        # Initial values for simulation 
         sim.K[0] = par.K_ini
         sim.L[0] = par.L_ini
 
-        # c. Simulate the model 
+        # Simulate the model 
         for t in range(par.simT):
             self.simulate_before_s(par, sim, t)
             if t == par.simT - 1: continue
@@ -167,28 +167,28 @@ class modelclass():
         sim.L[0] = par.L_ini
 
         # c. Simulating for t = 0 and t = 1
-        self.simulate_before_s(par, sim, t=0)
-        print('Consumption by old people in period t = 0', f'{sim.C2[0] = :.3f}')
+        self.simulate_before_s(par,sim,t=0)
+        print('Consumption by old people in period t = 0',f'{sim.C2[0] = :.3f}')
 
-        self.simulate_after_s(par, sim, s=s_guess, t=0)
-        print('Consumption by young in period t = 0', f'{sim.C1[0] = :.3f}')
+        self.simulate_after_s(par,sim,s=s_guess,t=0)
+        print('Consumption by young in period t = 0',f'{sim.C1[0] = :.3f}')
 
-        self.simulate_before_s(par, sim, t=1)
-        print('Consumption by old people in period t', f'{sim.C2[1] = :.3f}')
+        self.simulate_before_s(par,sim,t=1)
+        print('Consumption by old people in period t',f'{sim.C2[1] = :.3f}')
 
-        self.simulate_after_s(par, sim, s=s_guess, t=1)
-        print('Consumption by young people in period t', f'{sim.C1[1] = :.3f}')
+        self.simulate_after_s(par,sim,s=s_guess,t=1)
+        print('Consumption by young people in period t',f'{sim.C1[1] = :.3f}')
 
         # d. Calculating the Euler error
-        LHS_Euler = sim.C1[0] ** (-1)
-        RHS_Euler = (1 + sim.r[1]) * par.beta * sim.C2[1] ** (-1)
-        print(f'euler-error = {LHS_Euler - RHS_Euler:.3f}')
+        LHS_Euler = sim.C1[0]**(-1)
+        RHS_Euler = (1+sim.r[1])*par.beta * sim.C2[1]**(-1)
+        print(f'euler-error = {LHS_Euler-RHS_Euler:.3f}')
 
         # e. Check if the Euler error goes towards 0
         model.simulate()
-        LHS_Euler = sim.C1[18] ** (-1)
-        RHS_Euler = (1 + sim.r[19]) * par.beta * sim.C2[19] ** (-1)
-        print("euler error after model has been simulated", LHS_Euler - RHS_Euler)
+        LHS_Euler = sim.C1[18]**(-1)
+        RHS_Euler = (1+sim.r[19])*par.beta * sim.C2[19]**(-1)
+        print("euler error after model has been simulated", LHS_Euler-RHS_Euler)
 
     def run_with_shock(self, tau_shock, Gt_shock):
         """ Run simulation with a tax and government expenditure shock """
@@ -200,37 +200,26 @@ class modelclass():
         self.par.Gt = Gt_shock
 
         # Run the simulation
-        self.simulate()
+        self.simulate(do_print=False)
 
-        # Plot results
-        self.plot_results()
-
-    def plot_results(self):
-        """ Plot the results of the simulation """
-        sim = self.sim
-
-        fig, ax = plt.subplots(3, 1, figsize=(10, 12))
-        fig.suptitle("Impact of Government Shock on Capital Accumulation", fontsize=16)
-
-        ax[0].plot(sim.K, label="Capital Stock (K)")
-        ax[0].set_title("Capital Stock (K)")
-        ax[0].legend()
-
-        ax[1].plot(sim.s, label="Savings Rate (s)")
-        ax[1].set_title("Savings Rate (s)")
-        ax[1].legend()
-
-        ax[2].plot(sim.Gt, label="Government Expenditure (Gt)")
-        ax[2].plot(sim.tau, label="Tax Rate (tau)")
-        ax[2].set_title("Government Expenditure (Gt) and Tax Rate (tau)")
-        ax[2].legend()
-
-        plt.tight_layout()
+    def plot_convergence(self, k_no_shock, k_with_shock, ks_1):
+        """ Plot the results of the convergence simulation """
+        fig = plt.figure(figsize=(6, 6 / 1.5))
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(k_no_shock, label=r'$k_{t}$, (No Shock)')
+        ax.plot(k_with_shock, label=r'$k_{t}$, (With Shock)')
+        ax.axhline(ks_1, ls='--', color='black', label='Analytical Steady State')
+        ax.legend(frameon=True, fontsize=12)
+        ax.set_title('Convergence of Capital Accumulation')
+        ax.set_xlabel('Number of Periods')
+        ax.set_ylabel('Steady State Value')
+        fig.tight_layout()
         plt.show()
 
-# Usage Example (Optional)
+# Usage Example
 if __name__ == "__main__":
     model = modelclass()
     model.run_with_shock(tau_shock=0.1, Gt_shock=0.05)
+
 
 
