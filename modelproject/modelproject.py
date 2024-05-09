@@ -1,4 +1,4 @@
-# Importing modules 
+# Importing modules
 from types import SimpleNamespace
 import time
 import numpy as np
@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class modelclass():
 
     def __init__(self, do_print=True):
-        """ create the model """
+        """Create the model"""
         if do_print: print('initializing the model:')
 
         self.par = SimpleNamespace()
@@ -21,30 +21,30 @@ class modelclass():
         self.allocate()
 
     def setup(self):
-        """ baseline parameters """
+        """Baseline parameters"""
         par = self.par
 
-        # a. Household parameters 
-        par.rho = 0.05           # discount rate 
-        par.n = 0.04             # population growth 
+        # a. Household parameters
+        par.rho = 0.05           # discount rate
+        par.n = 0.04             # population growth
 
-        # b. Firms parameters 
-        par.p_f = 'cobb-douglas' # production function 
-        par.alpha = 1/3          # percentage of capital used in production 
+        # b. Firms parameters
+        par.p_f = 'cobb-douglas' # production function
+        par.alpha = 1/3          # percentage of capital used in production
 
-        # c. Government parameters 
+        # c. Government parameters
         par.tau = 0.0            # wage tax
         par.Gt = 0.0             # government purchases (per worker)
 
         # d. Start values and length of simulation
-        par.K_ini = 0.1          # initial capital stock 
-        par.L_ini = 1.0          # initial population 
-        par.simT = 20            # length of simulation 
+        par.K_ini = 0.1          # initial capital stock
+        par.L_ini = 1.0          # initial population
+        par.simT = 20            # length of simulation
 
     def allocate(self):
-        """ allocate arrays for simulation """
-        par = self.par 
-        sim = self.sim 
+        """Allocate arrays for simulation"""
+        par = self.par
+        sim = self.sim
 
         # a. List of variables
         household = ['C1', 'C2', 's']
@@ -58,16 +58,16 @@ class modelclass():
             sim.__dict__[varname] = np.nan * np.ones(par.simT)
 
     def simulate(self, do_print=True):
-        """ simulate model """
+        """Simulate model"""
         t0 = time.time()
         par = self.par
         sim = self.sim
 
-        # Initial values for simulation 
+        # Initial values for simulation
         sim.K[0] = par.K_ini
         sim.L[0] = par.L_ini
 
-        # Simulate the model 
+        # Simulate the model
         for t in range(par.simT):
             self.simulate_before_s(par, sim, t)
             if t == par.simT - 1: continue
@@ -80,11 +80,11 @@ class modelclass():
 
             sim.s[t] = s
             self.simulate_after_s(par, sim, t, s)
-        
+
         if do_print: print(f'simulation done in {time.time() - t0:.3f} secs')
 
     def find_s_bracket(self, par, sim, t, maxiter=500, do_print=False):
-        """ find bracket for s to search in """
+        """Find bracket for s to search in"""
         s_min = 0.0 + 1e-8
         s_max = 1.0 - 1e-8
 
@@ -113,7 +113,7 @@ class modelclass():
             it += 1
 
     def calc_euler_error(self, s, par, sim, t):
-        """ target function for finding s with bisection """
+        """Target function for finding s with bisection"""
         self.simulate_after_s(par, sim, t, s)
         self.simulate_before_s(par, sim, t + 1)
 
@@ -124,7 +124,7 @@ class modelclass():
         return LHS - RHS
 
     def simulate_before_s(self, par, sim, t):
-        """ simulate forward """
+        """Simulate forward"""
         if t == 0:
             sim.K[t] = par.K_ini
             sim.L[t] = par.L_ini
@@ -142,56 +142,15 @@ class modelclass():
         sim.C2[t] = (1 + sim.r[t]) * (sim.K[t])
 
     def simulate_after_s(self, par, sim, t, s):
-        """ simulate forward """
+        """Simulate forward"""
         sim.k[t] = sim.K[t] / sim.L[t]
         sim.C1[t] = ((1 - par.tau) * sim.w[t] * (1.0 - s) * sim.L[t])
 
         I = sim.Y[t] - sim.C1[t] - sim.C2[t] - sim.Gt[t]
         sim.K[t + 1] = sim.K[t] + I
 
-    def sim_results(self):
-        """ Display numerical results for initial simulations """
-
-        # a. Importing the model 
-        model = modelclass()
-
-        par = model.par 
-        sim = model.sim 
-
-        # b. Guess for savings 
-        s_guess = 0.4
-
-        par.beta = 1/(1+par.rho)
-
-        sim.K[0] = par.K_ini
-        sim.L[0] = par.L_ini
-
-        # c. Simulating for t = 0 and t = 1
-        self.simulate_before_s(par,sim,t=0)
-        print('Consumption by old people in period t = 0',f'{sim.C2[0] = :.3f}')
-
-        self.simulate_after_s(par,sim,s=s_guess,t=0)
-        print('Consumption by young in period t = 0',f'{sim.C1[0] = :.3f}')
-
-        self.simulate_before_s(par,sim,t=1)
-        print('Consumption by old people in period t',f'{sim.C2[1] = :.3f}')
-
-        self.simulate_after_s(par,sim,s=s_guess,t=1)
-        print('Consumption by young people in period t',f'{sim.C1[1] = :.3f}')
-
-        # d. Calculating the Euler error
-        LHS_Euler = sim.C1[0]**(-1)
-        RHS_Euler = (1+sim.r[1])*par.beta * sim.C2[1]**(-1)
-        print(f'euler-error = {LHS_Euler-RHS_Euler:.3f}')
-
-        # e. Check if the Euler error goes towards 0
-        model.simulate()
-        LHS_Euler = sim.C1[18]**(-1)
-        RHS_Euler = (1+sim.r[19])*par.beta * sim.C2[19]**(-1)
-        print("euler error after model has been simulated", LHS_Euler-RHS_Euler)
-
     def run_with_shock(self, tau_shock, Gt_shock):
-        """ Run simulation with a tax and government expenditure shock """
+        """Run simulation with a tax and government expenditure shock"""
         self.setup()
         self.allocate()
 
@@ -203,23 +162,57 @@ class modelclass():
         self.simulate(do_print=False)
 
     def plot_convergence(self, k_no_shock, k_with_shock, ks_1):
-        """ Plot the results of the convergence simulation """
+        """Plot the results of the convergence simulation"""
         fig = plt.figure(figsize=(6, 6 / 1.5))
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(k_no_shock, label=r'$k_{t}$, (No Shock)')
-        ax.plot(k_with_shock, label=r'$k_{t}$, (With Shock)')
+        ax.plot(k_no_shock, label=r'$k_{t}$, (No Shock)', color='blue')
+        ax.plot(k_with_shock, label=r'$k_{t}$, (With Shock)', color='red')
         ax.axhline(ks_1, ls='--', color='black', label='Analytical Steady State')
         ax.legend(frameon=True, fontsize=12)
         ax.set_title('Convergence of Capital Accumulation')
-        ax.set_xlabel('Number of Periods')
+        ax.set_xlabel('Numbers of Periods')
         ax.set_ylabel('Steady State Value')
         fig.tight_layout()
+        plt.show()
+
+    def plot_k_vs_k(self, k_no_shock, k_with_shock, ks_1):
+        """Plot k_{t+1} vs k_t"""
+        k_t_max = max(np.max(k_no_shock), np.max(k_with_shock))
+        k_vals = np.linspace(0, k_t_max, 100)
+        
+        # Production function for k_{t+1} vs k_t without shock
+        k_next_no_shock = (1 - self.par.alpha) * k_vals ** self.par.alpha / ((1 + self.par.n) * (2 + self.par.rho))
+
+        # Production function for k_{t+1} vs k_t with shock
+        k_next_with_shock = (1 - self.par.alpha) * k_vals ** self.par.alpha / ((1 + self.par.n) * (2 + self.par.rho)) - self.par.Gt
+
+        # Plot the trajectories
+        fig, ax = plt.subplots(figsize=(8, 6))
+        ax.plot(k_vals, k_next_no_shock, label=r'$k_{t+1}$ vs. $k_t$ (No Shock)', color='blue')
+        ax.plot(k_vals, k_next_with_shock, label=r'$k_{t+1}$ vs. $k_t$ (With Shock)', color='red')
+        ax.plot(k_no_shock[:-1], k_no_shock[1:], 'o-', label=r'Trajectory (No Shock)', color='blue')
+        ax.plot(k_with_shock[:-1], k_with_shock[1:], 'o-', label=r'Trajectory (With Shock)', color='red')
+        ax.axvline(ks_1, color='black', ls='--', label='Analytical Steady State')
+        ax.legend(frameon=True, fontsize=12)
+        ax.set_xlabel(r'$k_t$')
+        ax.set_ylabel(r'$k_{t+1}$')
+        ax.set_title(r'Capital Accumulation Trajectories ($k_{t+1}$ vs. $k_t$)')
+        ax.grid(True)
+
+        # Adding arrows to represent movement direction
+        for i in range(len(k_no_shock) - 1):
+            ax.annotate('', xy=(k_no_shock[i+1], k_no_shock[i+1]), xytext=(k_no_shock[i], k_no_shock[i+1]),
+                        arrowprops=dict(arrowstyle='->', color='blue'))
+
+        for i in range(len(k_with_shock) - 1):
+            ax.annotate('', xy=(k_with_shock[i+1], k_with_shock[i+1]), xytext=(k_with_shock[i], k_with_shock[i+1]),
+                        arrowprops=dict(arrowstyle='->', color='red'))
+
         plt.show()
 
 # Usage Example
 if __name__ == "__main__":
     model = modelclass()
     model.run_with_shock(tau_shock=0.1, Gt_shock=0.05)
-
 
 
