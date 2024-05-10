@@ -245,7 +245,7 @@ class modelclass():
         RHS_Euler = (1+sim.r[19])*par.beta * sim.C2[19]**(-1)
         print("euler error after model has been simulated", LHS_Euler-RHS_Euler)
 
-    # Usage Example
-    if __name__ == "__main__":
-        model = modelclass()
-        model.run_with_shock(tau_shock=0.1, Gt_shock=0.05)
+     # Usage Example
+        if __name__ == "__main__":
+            model = modelclass()
+            model.run_with_shock(tau_shock=0.1, Gt_shock=0.05)
