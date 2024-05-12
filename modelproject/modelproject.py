@@ -19,22 +19,16 @@ class modelclass():
         """Baseline parameters"""
         par = self.par
 
-        # a. Household parameters
-        par.rho = 0.05           # discount rate
-        par.n = 0.04             # population growth
-
-        # b. Firms parameters
-        par.p_f = 'cobb-douglas' # production function
-        par.alpha = 1/3          # percentage of capital used in production
-
-        # c. Government parameters
-        par.tau = 0.0            # wage tax
-        par.Gt = 0.0             # government purchases (per worker)
+        par.rho = 0.05           
+        par.n = 0.04
+        par.alpha = 1/3           
+        par.tau = 0.0            
+        par.Gt = 0.0            
 
         # d. Start values and length of simulation
-        par.K_ini = 0.1          # initial capital stock
-        par.L_ini = 1.0          # initial population
-        par.simT = 20            # length of simulation
+        par.K_ini = 0.05          
+        par.L_ini = 1.0          
+        par.simT = 50            
 
     def allocate(self):
         """Allocate arrays for simulation"""
@@ -155,20 +149,6 @@ class modelclass():
 
         # Run the simulation
         self.simulate(do_print=False)
-
-    def plot_convergence(self, k_no_shock, k_with_shock, ks_1):
-        """Plot the results of the convergence simulation"""
-        fig = plt.figure(figsize=(6, 6 / 1.5))
-        ax = fig.add_subplot(1, 1, 1)
-        ax.plot(k_no_shock, label=r'$k_{t}$, (No Shock)', color='blue')
-        ax.plot(k_with_shock, label=r'$k_{t}$, (With Shock)', color='red')
-        ax.axhline(ks_1, ls='--', color='black', label='Analytical Steady State')
-        ax.legend(frameon=True, fontsize=12)
-        ax.set_title('Convergence of Capital Accumulation')
-        ax.set_xlabel('Numbers of Periods')
-        ax.set_ylabel('Steady State Value')
-        fig.tight_layout()
-        plt.show()
 
     def plot_k_vs_k(self, k_no_shock, k_with_shock, ks_1):
         """Plot k_{t+1} vs k_t"""
