@@ -183,69 +183,12 @@ class modelclass():
 
         # Plot the trajectories
         fig, ax = plt.subplots(figsize=(8, 6))
-        ax.plot(k_vals, k_next_no_shock, label=r'$k_{t+1}$ vs. $k_t$ (No Shock)', color='blue')
-        ax.plot(k_vals, k_next_with_shock, label=r'$k_{t+1}$ vs. $k_t$ (With Shock)', color='red')
-        ax.plot(k_no_shock[:-1], k_no_shock[1:], 'o-', label=r'Trajectory (No Shock)', color='blue')
-        ax.plot(k_with_shock[:-1], k_with_shock[1:], 'o-', label=r'Trajectory (With Shock)', color='red')
-        ax.axvline(ks_1, color='black', ls='--', label='Analytical Steady State')
+        ax.plot(k_vals, k_next_no_shock, label=r'Without tax', color='blue')
+        ax.plot(k_vals, k_next_with_shock, label=r'With tax', color='red')
         ax.legend(frameon=True, fontsize=12)
         ax.set_xlabel(r'$k_t$')
         ax.set_ylabel(r'$k_{t+1}$')
-        ax.set_title(r'Capital Accumulation Trajectories ($k_{t+1}$ vs. $k_t$)')
+        ax.set_title(r'Capital Accumulation with and without tax')
         ax.grid(True)
 
-        # Adding arrows to represent movement direction
-        for i in range(len(k_no_shock) - 1):
-            ax.annotate('', xy=(k_no_shock[i+1], k_no_shock[i+1]), xytext=(k_no_shock[i], k_no_shock[i+1]),
-                        arrowprops=dict(arrowstyle='->', color='blue'))
-
-        for i in range(len(k_with_shock) - 1):
-            ax.annotate('', xy=(k_with_shock[i+1], k_with_shock[i+1]), xytext=(k_with_shock[i], k_with_shock[i+1]),
-                        arrowprops=dict(arrowstyle='->', color='red'))
-
         plt.show()
-
-    def sim_results(self):
-
-        # a. Importing the model 
-        model = modelclass()
-
-        par = model.par 
-        sim = model.sim 
-
-        # b. Guess for savings 
-        s_guess = 0.4
-
-        par.beta = 1/(1+par.rho)
-
-        sim.K[0] = par.K_ini
-        sim.L[0] = par.L_ini
-
-        # c. Simulating for t = 0 and t = 1
-        self.simulate_before_s(par,sim,t=0)
-        print('Consumption by old people in period t = 0',f'{sim.C2[0] = : .3f}')
-
-        self.simulate_after_s(par,sim,s=s_guess,t=0)
-        print('Consumption by young in period t = 0',f'{sim.C1[0] = : .3f}')
-
-        self.simulate_before_s(par,sim,t=1)
-        print('Consumption by old people in period t',f'{sim.C2[1] = : .3f}')
-
-        self.simulate_after_s(par,sim,s=s_guess,t=1)
-        print('Consumption by young people in period t',f'{sim.C1[1] = : .3f}')
-
-        # d. Calculating the Euler error
-        LHS_Euler = sim.C1[0]**(-1)
-        RHS_Euler = (1+sim.r[1])*par.beta * sim.C2[1]**(-1)
-        print(f'euler-error = {LHS_Euler-RHS_Euler:.3f}')
-
-        # e. Check if the Euler error goes towards 0
-        model.simulate()
-        LHS_Euler = sim.C1[18]**(-1)
-        RHS_Euler = (1+sim.r[19])*par.beta * sim.C2[19]**(-1)
-        print("euler error after model has been simulated", LHS_Euler-RHS_Euler)
-
-     # Usage Example
-        if __name__ == "__main__":
-            model = modelclass()
-            model.run_with_shock(tau_shock=0.1, Gt_shock=0.05)
