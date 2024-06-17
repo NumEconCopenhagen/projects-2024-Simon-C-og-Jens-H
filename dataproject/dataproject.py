@@ -88,18 +88,6 @@ for year in range(2006,2023+1):
     next_year_str = str(year+1)
     new_year_loop[f'{year_str}/{next_year_str}'] = year_str
 sport_api_annual = sport_api.copy()
-sport_api_annual['year'] = sport_api_annual['year'].replace(new_year_loop)    
+sport_api_annual['year'] = sport_api_annual['year'].replace(new_year_loop)
+sport_api_annual['avr_attend_numeric'] = pd.to_numeric(sport_api['avr_attend'], errors='coerce')
 
-# we drop the non-numeric attend-variable
-sport_api_annual = sport_api_annual.drop(columns=['avr_attend'])
-
-# We group the data by 'year' and 'event'
-grouped_data = sport_api_annual.groupby(['year', 'event'])['avr_attend_numeric'].sum().reset_index()
-
-# Select and filter only the 'national' and 'league' observations for each sport, then create a new variable for each
-sports = ['icehockey', 'football', 'basketball', 'handball']
-for sport in sports:
-    filtered_data = grouped_data[grouped_data['event'].str.contains(sport)]
-    overall_attend = filtered_data.groupby('year')['avr_attend_numeric'].sum().reset_index()
-    overall_attend.rename(columns={'avr_attend_numeric': f'{sport}_overall_attend'}, inplace=True)
-    attend_sum = sport_api_annual.merge(overall_attend, on='year', how='left')
