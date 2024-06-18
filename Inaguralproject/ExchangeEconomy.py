@@ -4,19 +4,15 @@ from scipy import optimize
 
 class ExchangeEconomyClass:
 
-    def __init__(self):
+    def __init__(self, alpha=1/3, beta=2/3, w1A=0.8, w2A=0.3):
 
         par = self.par = SimpleNamespace()
-
-        # a. preferences
-        par.alpha = 1/3
-        par.beta = 2/3
-
-        # b. endowments
-        par.w1A = 0.8
-        par.w2A = 0.3
-        par.w1B = 1-par.w1A
-        par.w2B = 1-par.w2A
+        par.alpha = alpha
+        par.beta = beta
+        par.w1A = w1A
+        par.w2A = w2A
+        par.w1B = 1 - w1A
+        par.w2B = 1 - w2A
 
     def utility_A(self,x1A,x2A):
         par = self.par
