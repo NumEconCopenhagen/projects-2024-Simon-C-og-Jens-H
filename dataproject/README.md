@@ -4,6 +4,7 @@ Our project is titled 'Sports Attendance and Memberships in Denmark' and t explo
 
 The data is collected from Danmarks Statistik, DST, with data concerning memberships collected at IDRAKT01 (https://www.statistikbanken.dk/IDRTIL01) and data concerning attendance collected at IDRTIL01 (https://www.statistikbanken.dk/IDRTIL01)
 
+The results of the project can be seen by running dataproject.ipynb.
 
 
 Dependencies: Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
