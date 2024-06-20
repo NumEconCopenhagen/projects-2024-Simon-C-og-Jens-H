@@ -191,8 +191,7 @@ class OLG_model:
         plt.ylabel('Steady state capital')
         plt.title('Convergence of capital accumulation')
         plt.legend()
+        plt.ylim(0.1, 0.18)
+        plt.xlim(0, 6)
         plt.grid(True)
         plt.show()
-
-
-    
