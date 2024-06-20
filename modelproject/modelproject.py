@@ -169,10 +169,16 @@ class OLG_model:
         par = self.par
         k_t = np.zeros(periods)
         k_t[0] = k0
+
         for t in range(1, periods):
-            k_t[t] = (par.A * (1 - par.alpha) * k_t[t-1] ** par.alpha) / ((1 + n) * (2 + par.rho))
-            if delay:
-                time.sleep(0.1)
+            if not delay or t < periods // 2:
+                k_t[t] = ((par.A * (1 - par.alpha) * k_t[t-1] ** par.alpha) /
+                          ((1 + n) * (2 + par.rho)) *
+                          (1 / (1 + ((1 + par.rho) / (2 + par.rho)) * ((1 - par.alpha) / par.alpha) * par.tau)))
+            else:
+                k_t[t] = ((par.A * (1 - par.alpha) * k_t[t-1] ** par.alpha) /
+                          ((1 + n) * (2 + par.rho)))
+
         return k_t
     
     def plot_convergence(self, k0, periods, delay=False):
@@ -180,18 +186,18 @@ class OLG_model:
             self.solve_steady_state()
 
         k_t_old = self.simulate_capital_accumulation(k0, periods, 0.05, delay)
-        k_t_new = self.simulate_capital_accumulation(k0, periods, 0.10, delay)
+        k_t_new = self.simulate_capital_accumulation(k0, periods, -0.05, delay)
 
         plt.figure(figsize=(10, 6))
         plt.plot(range(periods), k_t_old, label='$k_t$, old (n = 0.05)')
         plt.plot(range(periods), k_t_new, label='$k_t$, new (n = 0.10)')
         plt.axhline(y=k_t_old[-1], color='blue', linestyle='--', label='analytical steady state (n = 0.05)')
-        plt.axhline(y=k_t_new[-1], color='orange', linestyle='--', label='analytical steady state (n = 0.10)')
+        plt.axhline(y=k_t_new[-1], color='orange', linestyle='--', label='analytical steady state (n = -0.05)')
         plt.xlabel('Periods')
         plt.ylabel('Steady state capital')
         plt.title('Convergence of capital accumulation')
         plt.legend()
-        plt.ylim(0.1, 0.18)
+        plt.ylim(0.1, 0.22)
         plt.xlim(0, 6)
         plt.grid(True)
         plt.show()
