@@ -7,4 +7,6 @@ Our project is titled 'Sports Attendance and Memberships in Denmark' and t explo
 
 Dependencies: Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
 
-pip install git+https://github.com/alemartinello/dstapi pip install pandas-datareader
+``pip install git+https://github.com/alemartinello/dstapi``
+
+``pip install pandas-datareader``
