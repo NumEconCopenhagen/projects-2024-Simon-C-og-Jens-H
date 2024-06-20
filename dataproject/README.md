@@ -2,6 +2,8 @@
 
 Our project is titled 'Sports Attendance and Memberships in Denmark' and t explores the sporting habits of adults in Denmark from 2014 to 2022, analyzing trends in sports participation and event attendance. 
 
+The data is collected from Danmarks Statistik, DST, with data concerning memberships collected at IDRAKT01 (https://www.statistikbanken.dk/statbank5a/selectvarval/define.asp?PLanguage=0&subword=tabsel&MainTable=IDRAKT01&PXSId=209181&tablestyle=&ST=SD&buttons=0) and data concerning attendance collected at  
+The data concerning memberships is collected IDRAKT01
 
 
 
@@ -10,3 +12,4 @@ Dependencies: Apart from a standard Anaconda Python 3 installation, the project 
 ``pip install git+https://github.com/alemartinello/dstapi``
 
 ``pip install pandas-datareader``
+
