@@ -83,7 +83,7 @@ class OLG_model:
 
         plt.plot(k_t_payg, k_t_plus_1_payg, label='$k_{t+1}$ with PAYG', color='green')
         plt.scatter(k_star_payg, k_star_payg, color='red', zorder=5, label=f'Steady State with PAYG = {k_star_payg:.3f}')
-        plt.axvline(x=k_star_payg, ymax=k_star_payg / max(k_t_plus_1_payg), color='red', linestyle=':', label=f'$k^*_{PAYG}$ = {k_star_payg:.3f}')
+        plt.axvline(x=k_star_payg, ymax=k_star_payg / max(k_t_plus_1_payg), color='red', linestyle=':', label=f'$k^*$ = {k_star_payg:.3f}')
 
         plt.xlabel('$k_t$')
         plt.ylabel('$k_{t+1}$')
