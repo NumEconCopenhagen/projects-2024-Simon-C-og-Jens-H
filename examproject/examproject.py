@@ -162,14 +162,14 @@ class problem3:
         plt.legend()
         plt.grid(True)
         plt.show()
-
-    def compute_barycentric_coordinates(self):
+    
+    def find_coordinates(self):
         A, B, C, D, y = self.A, self.B, self.C, self.D, self.y
-
+        
         if any(p is None for p in [A, B, C, D]):
             print("Could not find all points A, B, C, D.")
             return None, None
-       
+
         # Compute the barycentric coordinates for triangle ABC
         denom_ABC = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1])
         r1_ABC = ((B[1] - C[1]) * (y[0] - C[0]) + (C[0] - B[0]) * (y[1] - C[1])) / denom_ABC
@@ -184,10 +184,18 @@ class problem3:
 
         return (r1_ABC, r2_ABC, r3_ABC), (r1_CDA, r2_CDA, r3_CDA)
     
-    def compute_and_check(self, f):
-        r_ABC, r_CDA = self.compute_barycentric_coordinates()
-        if r_ABC and r_CDA:
-            approximation_ABC = r_ABC[0] * f(*self.A) + r_ABC[1] * f(*self.B) + r_ABC[2] * f(*self.C)
-            approximation_CDA = r_CDA[0] * f(*self.C) + r_CDA[1] * f(*self.D) + r_CDA[2] * f(*self.A)
-            return approximation_ABC, approximation_CDA
-        return None, None
+    def check_point_inside_triangle(self):
+        r1_ABC, r2_ABC, r3_ABC = self.compute_barycentric_coordinates_ABC()
+        r1_CDA, r2_CDA, r3_CDA = self.compute_barycentric_coordinates_CDA()
+
+        inside_ABC = r1_ABC >= 0 and r2_ABC >= 0 and r3_ABC >= 0
+        inside_CDA = r1_CDA >= 0 and r2_CDA >= 0 and r3_CDA >= 0
+
+        if inside_ABC:
+            print(f"Point y is inside triangle ABC with barycentric coordinates ({r1_ABC:.4f}, {r2_ABC:.4f}, {r3_ABC:.4f})")
+            print(f"Point y is not inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
+        elif inside_CDA:
+            print(f"Point y is not inside triangle ABC with barycentric coordinates ({r1_ABC:.4f}, {r2_ABC:.4f}, {r3_ABC:.4f})")
+            print(f"Point y is inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
+        else:
+            print("Point y is not inside triangle ABC or CDA")
