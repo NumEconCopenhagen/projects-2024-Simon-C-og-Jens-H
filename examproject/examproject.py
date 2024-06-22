@@ -198,3 +198,51 @@ class problem3:
             print(f"Point y is inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
         else:
             print("Point y is not inside triangle ABC or CDA")
+
+    def compute_and_check(self, f):
+        r_ABC, r_CDA = self.compute_barycentric_coordinates()
+        if r_ABC and r_CDA:
+            approximation_ABC = r_ABC[0] * f(*self.A) + r_ABC[1] * f(*self.B) + r_ABC[2] * f(*self.C)
+            approximation_CDA = r_CDA[0] * f(*self.C) + r_CDA[1] * f(*self.D) + r_CDA[2] * f(*self.A)
+            return approximation_ABC, approximation_CDA
+        return None, None
+    
+    def approx_vs_true(self):
+        f = lambda x1, x2: x1 * x2
+
+        A = min((x for x in self.X if x[0] > self.y[0] and x[1] > self.y[1]), key=lambda x: np.linalg.norm(x - self.y), default=np.nan)
+        B = min((x for x in self.X if x[0] > self.y[0] and x[1] < self.y[1]), key=lambda x: np.linalg.norm(x - self.y), default=np.nan)
+        C = min((x for x in self.X if x[0] < self.y[0] and x[1] < self.y[1]), key=lambda x: np.linalg.norm(x - self.y), default=np.nan)
+        D = min((x for x in self.X if x[0] < self.y[0] and x[1] > self.y[1]), key=lambda x: np.linalg.norm(x - self.y), default=np.nan)
+
+        if any(np.isnan(point).any() for point in [A, B, C, D]):
+            print("One or more points A, B, C, D could not be found.")
+            return
+
+        denom_ABC = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1])
+        r1_ABC = ((B[1] - C[1]) * (self.y[0] - C[0]) + (C[0] - B[0]) * (self.y[1] - C[1])) / denom_ABC
+        r2_ABC = ((C[1] - A[1]) * (self.y[0] - C[0]) + (A[0] - C[0]) * (self.y[1] - C[1])) / denom_ABC
+        r3_ABC = 1 - r1_ABC - r2_ABC
+
+        denom_CDA = (D[1] - A[1]) * (C[0] - A[0]) + (A[0] - D[0]) * (C[1] - A[1])
+        r1_CDA = ((D[1] - A[1]) * (self.y[0] - A[0]) + (A[0] - D[0]) * (self.y[1] - A[1])) / denom_CDA
+        r2_CDA = ((A[1] - C[1]) * (self.y[0] - A[0]) + (C[0] - A[0]) * (self.y[1] - A[1])) / denom_CDA
+        r3_CDA = 1 - r1_CDA - r2_CDA
+
+        fy_true = f(self.y[0], self.y[1])
+
+        if r1_ABC >= 0 and r2_ABC >= 0 and r3_ABC >= 0:
+            approximation_ABC = r1_ABC * f(*A) + r2_ABC * f(*B) + r3_ABC * f(*C)
+            print(f"Point y is inside triangle ABC with barycentric coordinates ({r1_ABC:.3f}, {r2_ABC:.3f}, {r3_ABC:.3f})")
+            print(f"Approximation of f(y): {approximation_ABC:.3f}")
+            print(f"True value of f(y):    {fy_true:.3f}")
+        elif r1_CDA >= 0 and r2_CDA >= 0 and r3_CDA >= 0:
+            approximation_CDA = r1_CDA * f(*C) + r2_CDA * f(*D) + r3_CDA * f(*A)
+            print(f"Point y is inside triangle CDA with barycentric coordinates ({r1_CDA:.3f}, {r2_CDA:.3f}, {r3_CDA:.3f})")
+            print(f"Approximation of f(y): {approximation_CDA:.3f}")
+            print(f"True value of f(y):    {fy_true:.3f}")
+        else:
+            print("Point y is not inside triangle ABC or CDA")
+
+        diff = fy_true - approximation_ABC
+        print(f"Difference is {diff:.3f}")
