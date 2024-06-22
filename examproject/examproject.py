@@ -185,8 +185,7 @@ class problem3:
         return (r1_ABC, r2_ABC, r3_ABC), (r1_CDA, r2_CDA, r3_CDA)
     
     def check_point_inside_triangle(self):
-        r1_ABC, r2_ABC, r3_ABC = self.compute_barycentric_coordinates_ABC()
-        r1_CDA, r2_CDA, r3_CDA = self.compute_barycentric_coordinates_CDA()
+        (r1_ABC, r2_ABC, r3_ABC), (r1_CDA, r2_CDA, r3_CDA) = self.find_coordinates()
 
         inside_ABC = r1_ABC >= 0 and r2_ABC >= 0 and r3_ABC >= 0
         inside_CDA = r1_CDA >= 0 and r2_CDA >= 0 and r3_CDA >= 0
