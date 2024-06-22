@@ -2,137 +2,150 @@ import numpy as np
 import pandas as pd
 from types import SimpleNamespace
 import matplotlib.pyplot as plt
+from scipy.optimize import root
+from scipy.optimize import minimize
 
 
-class problem_1:
-    def __init__(self, A, gamma, alpha, nu, epsilon, tau, T):
-        # Initialize parameters
-        self.A = A
-        self.gamma = gamma
-        self.alpha = alpha
-        self.nu = nu
-        self.epsilon = epsilon
-        self.tau = tau
-        self.T = T
-        self.w = 1.0  # Wage (numeraire), assumed to be 1 for simplicity
+class problem1:
+    def __init__(self, par):
+        self.par = par
+
+    def firm_behavior(self, p_j, w):
+        A, gamma = self.par.A, self.par.gamma
+        ell_j_star = (p_j * A * gamma / w) ** (1 / (1 - gamma))
+        y_j_star = A * (ell_j_star) ** gamma
+        pi_j_star = (1 - gamma) / gamma * w * (p_j * A * gamma / w) ** (1 / (1 - gamma))
+        return ell_j_star, y_j_star, pi_j_star
+
+    def consumer_behavior(self, p1, p2, w, tau, T):
+        # Aggregate profits from firms
+        _, _, pi1_star = self.firm_behavior(p1, w)
+        _, _, pi2_star = self.firm_behavior(p2, w)
+        profits = pi1_star + pi2_star
+
+        # Budget constraint
+        budget = lambda ell: w * ell + T + profits
+
+        # Consumption given labor supply
+        c1 = lambda ell: self.par.alpha * budget(ell) / p1
+        c2 = lambda ell: (1 - self.par.alpha) * budget(ell) / (p2 + tau)
+
+        # Consumer's optimization problem
+        utility = lambda ell: np.log(c1(ell) ** self.par.alpha * c2(ell) ** (1 - self.par.alpha)) - self.par.nu * ell ** (1 + self.par.epsilon) / (1 + self.par.epsilon)
+        ell_star = self.optimize_labor(utility)
+        return c1(ell_star), c2(ell_star), ell_star
+
+    def optimize_labor(self, utility):
+        from scipy.optimize import minimize_scalar
+        res = minimize_scalar(lambda ell: -utility(ell), bounds=(0, 100), method='bounded')
+        return res.x
+
+    def check_market_clearing(self, p1_vals, p2_vals, w=1):
+        count = 0
+        for p1 in p1_vals:
+            for p2 in p2_vals:
+                # Get consumer's optimal behavior
+                c1_star, c2_star, ell_star = self.consumer_behavior(p1, p2, w, self.par.tau, self.par.T)
+
+                # Get firm's optimal behavior
+                ell1_star, y1_star, _ = self.firm_behavior(p1, w)
+                ell2_star, y2_star, _ = self.firm_behavior(p2, w)
+
+                # Check market clearing conditions
+                labor_market_clearing = np.isclose(ell_star, ell1_star + ell2_star)
+                goods_market1_clearing = np.isclose(c1_star, y1_star)
+                goods_market2_clearing = np.isclose(c2_star, y2_star)
+
+                if labor_market_clearing and goods_market1_clearing and goods_market2_clearing:
+                    count += 1
+                    print(f"Market clears for p1: {p1}, p2: {p2}")
         
-        # Price ranges
-        self.p1_range = np.linspace(0.1, 2.0, 10)
-        self.p2_range = np.linspace(0.1, 2.0, 10)
+        if count == 0:
+            print("No pairs found where markets clear.")
+        else:
+            print(f"Number of pairs where markets clear: {count}")
+    
+    def market_clearing_conditions(self, prices, w=1):
+        p1, p2 = prices
+        c1_star, c2_star, ell_star = self.consumer_behavior(p1, p2, w, self.par.tau, self.par.T)
+        ell1_star, y1_star, _ = self.firm_behavior(p1, w)
+        ell2_star, y2_star, _ = self.firm_behavior(p2, w)
+
+        market1_clearing = c1_star - y1_star
+        market2_clearing = c2_star - y2_star
+
+        return [market1_clearing, market2_clearing]
+    
+    def find_equilibrium_prices(self, initial_guess=[1, 1], w=1):
+        solution = root(self.market_clearing_conditions, initial_guess, args=(w,))
+        if solution.success:
+            return solution.x
+        else:
+            raise ValueError("Equilibrium prices not found.")
         
-        # Results storage
-        self.results_df = None
-    
-    def optimal_labor(self, p, A, w, gamma):
-        return (p * A * gamma / w) ** (1 / (1 - gamma))
-    
-    def optimal_output(self, labor, A, gamma):
-        return A * (labor ** gamma)
-    
-    def implied_profits(self, p, A, w, gamma):
-        labor = self.optimal_labor(p, A, w, gamma)
-        return (1 - gamma) / gamma * w * labor
-    
-    def optimal_consumption(self, w, labor, alpha, p1, p2, pi1, pi2, tau):
-        T = tau * (pi1 + pi2) / (p2 + tau)
-        c1 = alpha * (w * labor + T + pi1 + pi2) / p1
-        c2 = (1 - alpha) * (w * labor + T + pi1 + pi2) / (p2 + tau)
-        return c1, c2
-    
-    def utility_function(self, c1, c2, alpha, nu, labor, epsilon):
-        utility = np.log(c1 ** alpha * c2 ** (1 - alpha)) - nu * (labor ** (1 + epsilon)) / (1 + epsilon)
-        return utility
-    
-    def solve(self):
-        results = []
+    def firm_output(self, p_j, w):
+        A, gamma = self.par.A, self.par.gamma
+        ell_j_star = (p_j * A * gamma / w) ** (1 / (1 - gamma))
+        y_j_star = A * ell_j_star ** gamma
+        return y_j_star
 
-        for p1 in self.p1_range:
-            for p2 in self.p2_range:
-                # Firm 1
-                labor1 = self.optimal_labor(p1, self.A, self.w, self.gamma)
-                output1 = self.optimal_output(labor1, self.A, self.gamma)
-                pi1 = self.implied_profits(p1, self.A, self.w, self.gamma)
+    def social_welfare_function(self, tau, T):
+        p1, p2 = self.find_equilibrium_prices()
+        c1_star, c2_star, ell_star = self.consumer_behavior(p1, p2, 1, tau, T)
+        y2_star = self.firm_output(p2, 1)
+        SWF = np.log(c1_star ** self.par.alpha * c2_star ** (1 - self.par.alpha)) - self.par.nu * ell_star ** (1 + self.par.epsilon) / (1 + self.par.epsilon) - self.par.kappa * y2_star
+        return -SWF  # Minimize -SWF to maximize SWF
 
-                # Firm 2
-                labor2 = self.optimal_labor(p2, self.A, self.w, self.gamma)
-                output2 = self.optimal_output(labor2, self.A, self.gamma)
-                pi2 = self.implied_profits(p2, self.A, self.w, self.gamma)
+    def find_optimal_tax_transfer(self, initial_guess=[1.0, 0.0]):
+        bounds = [(0, None), (None, None)]  # Adjust bounds as necessary for tau and T
+        method = 'SLSQP'  # Use 'SLSQP' method for bounds and constraints handling
 
-                # Total labor and consumption
-                total_labor = labor1 + labor2
-                c1, c2 = self.optimal_consumption(self.w, total_labor, self.alpha, p1, p2, pi1, pi2, self.tau)
-
-                # Calculate utility
-                utility = self.utility_function(c1, c2, self.alpha, self.nu, total_labor, self.epsilon)
-
-                # Market clearing conditions
-                labor_clearing = np.isclose(total_labor, labor1 + labor2)
-                good1_clearing = np.isclose(c1, output1)
-                good2_clearing = np.isclose(c2, output2)
-
-                results.append({
-                    'p1': p1,
-                    'p2': p2,
-                    'Labor Clearing': labor_clearing,
-                    'Good1 Clearing': good1_clearing,
-                    'Good2 Clearing': good2_clearing,
-                    'Utility': utility
-                })
-
-        # Convert results to DataFrame
-        self.results_df = pd.DataFrame(results)
-    
-    def plot_results(self):
-        if self.results_df is None or self.results_df.empty:
-            print("No market clearing prices found.")
-            return
-
-        # Extract results where labor market clears
-        labor_clear = self.results_df[self.results_df['Labor Clearing']]
-        all_clear = self.results_df[self.results_df['Labor Clearing'] & self.results_df['Good1 Clearing'] & self.results_df['Good2 Clearing']]
+        result = minimize(lambda x: self.social_welfare_function(x[0], x[1]), initial_guess, method=method, bounds=bounds)
         
-        # Plotting
-        plt.figure(figsize=(12, 8))
+        if result.success:
+            return result.x[0], result.x[1]
+        else:
+            raise ValueError("Optimization failed to find optimal tau and T.")
 
-        # Plot for Labor Clearing
-        plt.subplot(2, 2, 1)
-        if not labor_clear.empty:
-            plt.scatter(labor_clear['p1'], labor_clear['p2'], c='black', label='Labor Clearing', marker='o')
-        plt.xlabel('p1')
-        plt.ylabel('p2')
-        plt.title('Labor Market Clearing')
-        plt.legend()
-        plt.grid(True)
+class problem2:
+    def __init__(self, J, N, K, sigma, v, c):
+        self.J = J
+        self.N = N
+        self.K = K
+        self.sigma = sigma
+        self.v = v
+        self.c = c
+    
+    def simulate(self):
+        # Initialize arrays to store results
+        expected_utility = np.zeros(self.J)
+        avg_realized_utility = np.zeros(self.J)
 
-        # Plot for Good1 Clearing
-        plt.subplot(2, 2, 2)
-        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='Good1 Clearing', marker='o')
-        plt.xlabel('p1')
-        plt.ylabel('p2')
-        plt.title('Good1 Market Clearing')
-        plt.legend()
-        plt.grid(True)
-
-        # Plot for Good2 Clearing
-        plt.subplot(2, 2, 3)
-        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='Good2 Clearing', marker='o')
-        plt.xlabel('p1')
-        plt.ylabel('p2')
-        plt.title('Good2 Market Clearing')
-        plt.legend()
-        plt.grid(True)
-
-        # Plot for All Clearing Conditions
-        plt.subplot(2, 2, 4)
-        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='All Markets Clearing', marker='o')
-        plt.xlabel('p1')
-        plt.ylabel('p2')
-        plt.title('All Markets Clearing')
-        plt.legend()
-        plt.grid(True)
-
-        plt.tight_layout()
-        plt.show()
+        # Simulation loop
+        for j in range(self.J):
+            sum_expected_utility = 0.0
+            sum_realized_utility = 0.0
+            
+            for k in range(self.K):
+                # Draw epsilon_i,j^k from normal distribution
+                epsilon_ij = np.random.normal(loc=0, scale=self.sigma, size=self.N)
+                
+                # Calculate utility for career j
+                utility_ij = self.v[j] + epsilon_ij
+                
+                # Calculate expected utility (mean over N graduates)
+                sum_expected_utility += np.mean(utility_ij)
+                
+                # Calculate average realized utility (mean over N graduates)
+                sum_realized_utility += np.mean(self.v[j] + epsilon_ij)
+            
+            # Average over K simulations
+            expected_utility[j] = sum_expected_utility / self.K
+            avg_realized_utility[j] = sum_realized_utility / self.K
+        
+        return expected_utility, avg_realized_utility
+    
+    
 
 
 class problem3:
