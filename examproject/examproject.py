@@ -246,3 +246,33 @@ class problem3:
 
         diff = fy_true - approximation_ABC
         print(f"Difference is {diff:.3f}")
+
+    def last_one(self, Y):
+        results = []
+
+        for y in Y:
+            self.y = y  # Update self.y to current y
+            self.find_points()  # Recompute A, B, C, D for the new y
+            r_ABC, r_CDA = self.find_coordinates()  # Compute barycentric coordinates
+
+            # Compute true value of f(y)
+            fy_true = y[0] * y[1]
+
+            # Compute approximate value of f(y)
+            if r_ABC and (r_ABC[0] >= 0 and r_ABC[1] >= 0 and r_ABC[2] >= 0):
+                f_y_approx = r_ABC[0] * (self.A[0] * self.A[1]) + r_ABC[1] * (self.B[0] * self.B[1]) + r_ABC[2] * (self.C[0] * self.C[1])
+            elif r_CDA and (r_CDA[0] >= 0 and r_CDA[1] >= 0 and r_CDA[2] >= 0):
+                f_y_approx = r_CDA[0] * (self.C[0] * self.C[1]) + r_CDA[1] * (self.D[0] * self.D[1]) + r_CDA[2] * (self.A[0] * self.A[1])
+            else:
+                f_y_approx = np.nan
+
+            # Store the results
+            results.append((y, fy_true, f_y_approx))
+
+        # Print results
+        for result in results:
+            y, f_y_true, f_y_approx = result
+            print(f"Point y = {y}:")
+            print(f"  True value of f(y): {f_y_true:.2f}")
+            print(f"  Approximated value of f(y): {f_y_approx:.5f}")
+            print()
