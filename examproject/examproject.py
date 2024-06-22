@@ -4,115 +4,135 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 
 
-class problem1:
-    def __init__(self):
-        self.par = SimpleNamespace()
-        self.par.A = 1.0
-        self.par.gamma = 0.5
-
-        # households
-        self.par.alpha = 0.3
-        self.par.nu = 1.0
-        self.par.epsilon = 2.0
-
-        # government
-        self.par.tau = 0.0
-        self.par.T = 0.0
-
-        # Question 3
-        self.par.kappa = 0.1
-
+class problem_1:
+    def __init__(self, A, gamma, alpha, nu, epsilon, tau, T):
+        # Initialize parameters
+        self.A = A
+        self.gamma = gamma
+        self.alpha = alpha
+        self.nu = nu
+        self.epsilon = epsilon
+        self.tau = tau
+        self.T = T
+        self.w = 1.0  # Wage (numeraire), assumed to be 1 for simplicity
+        
+        # Price ranges
         self.p1_range = np.linspace(0.1, 2.0, 10)
         self.p2_range = np.linspace(0.1, 2.0, 10)
         
-        self.results = []
-
-    def optimal_labor(self, p):
-        return (p * self.A * self.gamma / self.w) ** (1 / (1 - self.gamma))
-
-    def optimal_output(self, labor):
-        return self.A * (labor ** self.gamma)
-
-    def implied_profits(self, p):
-        labor = self.optimal_labor(p)
-        return (1 - self.gamma) / self.gamma * self.w * labor
-
-    def optimal_consumption(self, labor, p1, p2, pi1, pi2, tau):
-        T = tau * ((self.w * labor + pi1 + pi2) / (p2 + tau))
-        c1 = self.alpha * (self.w * labor + T + pi1 + pi2) / p1
-        c2 = (1 - self.alpha) * (self.w * labor + T + pi1 + pi2) / (p2 + tau)
+        # Results storage
+        self.results_df = None
+    
+    def optimal_labor(self, p, A, w, gamma):
+        return (p * A * gamma / w) ** (1 / (1 - gamma))
+    
+    def optimal_output(self, labor, A, gamma):
+        return A * (labor ** gamma)
+    
+    def implied_profits(self, p, A, w, gamma):
+        labor = self.optimal_labor(p, A, w, gamma)
+        return (1 - gamma) / gamma * w * labor
+    
+    def optimal_consumption(self, w, labor, alpha, p1, p2, pi1, pi2, tau):
+        T = tau * (pi1 + pi2) / (p2 + tau)
+        c1 = alpha * (w * labor + T + pi1 + pi2) / p1
+        c2 = (1 - alpha) * (w * labor + T + pi1 + pi2) / (p2 + tau)
         return c1, c2
-
-    def utility_function(self, labor, p1, p2, pi1, pi2, tau):
-        c1, c2 = self.optimal_consumption(labor, p1, p2, pi1, pi2, tau)
-        utility = np.log(c1 ** self.alpha * c2 ** (1 - self.alpha)) - self.nu * (labor ** (1 + self.epsilon)) / (1 + self.epsilon)
+    
+    def utility_function(self, c1, c2, alpha, nu, labor, epsilon):
+        utility = np.log(c1 ** alpha * c2 ** (1 - alpha)) - nu * (labor ** (1 + epsilon)) / (1 + epsilon)
         return utility
+    
+    def solve(self):
+        results = []
 
-    def solve_consumer_problem(self):
-        max_utility = -np.inf
-        optimal_labor = None
-        optimal_c1 = None
-        optimal_c2 = None
-        
         for p1 in self.p1_range:
             for p2 in self.p2_range:
-                for tau in [0.0]:  # Considering only tau = 0 initially
-                    for T in [0.0]:  # Considering only T = 0 initially
-                        labor_guess = 1.0  # Initial guess for labor
-                        
-                        # Define the utility function to maximize
-                        objective = lambda labor: -self.utility_function(labor, p1, p2, self.implied_profits(p1), self.implied_profits(p2), tau)
-                        
-                        # Optimize labor
-                        from scipy.optimize import minimize_scalar
-                        res = minimize_scalar(objective)
-                        if res.success:
-                            current_utility = -res.fun
-                            if current_utility > max_utility:
-                                max_utility = current_utility
-                                optimal_labor = res.x
-                                optimal_c1, optimal_c2 = self.optimal_consumption(optimal_labor, p1, p2, self.implied_profits(p1), self.implied_profits(p2), tau)
-        
-        return {
-            'optimal_labor': optimal_labor,
-            'optimal_c1': optimal_c1,
-            'optimal_c2': optimal_c2,
-            'max_utility': max_utility
-        }
+                # Firm 1
+                labor1 = self.optimal_labor(p1, self.A, self.w, self.gamma)
+                output1 = self.optimal_output(labor1, self.A, self.gamma)
+                pi1 = self.implied_profits(p1, self.A, self.w, self.gamma)
 
-    def check_market_clearing(self):
-        consumer_solution = self.solve_consumer_problem()
-        optimal_labor = consumer_solution['optimal_labor']
-        optimal_c1 = consumer_solution['optimal_c1']
-        optimal_c2 = consumer_solution['optimal_c2']
-        
-        for p1 in self.p1_range:
-            for p2 in self.p2_range:
-                labor1 = self.optimal_labor(p1)
-                labor2 = self.optimal_labor(p2)
-                output1 = self.optimal_output(labor1)
-                output2 = self.optimal_output(labor2)
-                pi1 = self.implied_profits(p1)
-                pi2 = self.implied_profits(p2)
-                
+                # Firm 2
+                labor2 = self.optimal_labor(p2, self.A, self.w, self.gamma)
+                output2 = self.optimal_output(labor2, self.A, self.gamma)
+                pi2 = self.implied_profits(p2, self.A, self.w, self.gamma)
+
+                # Total labor and consumption
                 total_labor = labor1 + labor2
-                c1, c2 = self.optimal_consumption(total_labor, p1, p2, pi1, pi2, self.tau)
-                
+                c1, c2 = self.optimal_consumption(self.w, total_labor, self.alpha, p1, p2, pi1, pi2, self.tau)
+
+                # Calculate utility
+                utility = self.utility_function(c1, c2, self.alpha, self.nu, total_labor, self.epsilon)
+
                 # Market clearing conditions
-                labor_clearing = np.isclose(total_labor, optimal_labor)
-                good1_clearing = np.isclose(c1, optimal_c1)
-                good2_clearing = np.isclose(c2, optimal_c2)
-                
-                self.results.append({
+                labor_clearing = np.isclose(total_labor, labor1 + labor2)
+                good1_clearing = np.isclose(c1, output1)
+                good2_clearing = np.isclose(c2, output2)
+
+                results.append({
                     'p1': p1,
                     'p2': p2,
                     'Labor Clearing': labor_clearing,
                     'Good1 Clearing': good1_clearing,
-                    'Good2 Clearing': good2_clearing
+                    'Good2 Clearing': good2_clearing,
+                    'Utility': utility
                 })
+
+        # Convert results to DataFrame
+        self.results_df = pd.DataFrame(results)
     
-    def get_results_df(self):
-        return pd.DataFrame(self.results)
+    def plot_results(self):
+        if self.results_df is None or self.results_df.empty:
+            print("No market clearing prices found.")
+            return
+
+        # Extract results where labor market clears
+        labor_clear = self.results_df[self.results_df['Labor Clearing']]
+        all_clear = self.results_df[self.results_df['Labor Clearing'] & self.results_df['Good1 Clearing'] & self.results_df['Good2 Clearing']]
+        
+        # Plotting
+        plt.figure(figsize=(12, 8))
+
+        # Plot for Labor Clearing
+        plt.subplot(2, 2, 1)
+        if not labor_clear.empty:
+            plt.scatter(labor_clear['p1'], labor_clear['p2'], c='black', label='Labor Clearing', marker='o')
+        plt.xlabel('p1')
+        plt.ylabel('p2')
+        plt.title('Labor Market Clearing')
+        plt.legend()
+        plt.grid(True)
+
+        # Plot for Good1 Clearing
+        plt.subplot(2, 2, 2)
+        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='Good1 Clearing', marker='o')
+        plt.xlabel('p1')
+        plt.ylabel('p2')
+        plt.title('Good1 Market Clearing')
+        plt.legend()
+        plt.grid(True)
+
+        # Plot for Good2 Clearing
+        plt.subplot(2, 2, 3)
+        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='Good2 Clearing', marker='o')
+        plt.xlabel('p1')
+        plt.ylabel('p2')
+        plt.title('Good2 Market Clearing')
+        plt.legend()
+        plt.grid(True)
+
+        # Plot for All Clearing Conditions
+        plt.subplot(2, 2, 4)
+        plt.scatter(all_clear['p1'], all_clear['p2'], c='black', label='All Markets Clearing', marker='o')
+        plt.xlabel('p1')
+        plt.ylabel('p2')
+        plt.title('All Markets Clearing')
+        plt.legend()
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
 
 
 class problem3:
