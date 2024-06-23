@@ -293,7 +293,7 @@ class problem2:
         plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 3)
         plt.plot(self.average_ex_post_realized_utility.index, self.average_ex_post_realized_utility, label='Average Ex Post Realized Utility', color='blue')
-        plt.title('Average Ex Post Realized Utility')
+        plt.title('Average Realized Utility')
         plt.xlabel('Graduate')
         plt.ylabel('Avg. Realized Utility')
         plt.xticks(np.arange(1, self.N + 1))
@@ -379,7 +379,7 @@ class problem2:
         plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 3)
         plt.plot(self.average_ex_post_realized_utility_switching.index, self.average_ex_post_realized_utility_switching, label='Average Ex Post Realized Utility', color='blue')
-        plt.title('Average Ex Post Realized Utility after Switching')
+        plt.title('Average Realized Utility after Switching')
         plt.xlabel('Graduate')
         plt.ylabel('Avg. Realized Utility')
         plt.xticks(np.arange(1, self.N + 1))  
@@ -435,7 +435,7 @@ class problem3:
         # We plot the figure that is asked for
         plt.figure(figsize=(8, 6))
         plt.scatter(self.X[:, 0], self.X[:, 1], label='Points in X')
-        plt.scatter(self.y[0], self.y[1], color='red', marker='s', label='Point y')
+        plt.scatter(self.y[0], self.y[1], color='red', label='Point y')
         plt.scatter([self.A[0], self.B[0], self.C[0], self.D[0]], [self.A[1], self.B[1], self.C[1], self.D[1]], color='green', label='A, B, C, D', marker='o')
         plt.text(self.A[0], self.A[1], 'A', fontsize=12, verticalalignment='bottom')
         plt.text(self.B[0], self.B[1], 'B', fontsize=12, verticalalignment='top')
@@ -486,12 +486,12 @@ class problem3:
         # We create prints if y is inside either of the triangle, and if it isnt at all 
         if inside_ABC:
             print(f"Point y is inside triangle ABC with barycentric coordinates ({r1_ABC:.4f}, {r2_ABC:.4f}, {r3_ABC:.4f})")
-            print(f"Point y is not inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
+            print(f"Point y is NOT inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
         elif inside_CDA:
-            print(f"Point y is not inside triangle ABC with barycentric coordinates ({r1_ABC:.4f}, {r2_ABC:.4f}, {r3_ABC:.4f})")
+            print(f"Point y is NOT inside triangle ABC with barycentric coordinates ({r1_ABC:.4f}, {r2_ABC:.4f}, {r3_ABC:.4f})")
             print(f"Point y is inside triangle CDA with barycentric coordinates ({r1_CDA:.4f}, {r2_CDA:.4f}, {r3_CDA:.4f})")
         else:
-            print("Point y is not inside triangle ABC or CDA")
+            print("Point y is NOT inside triangle ABC or CDA")
 
     def compute_and_check(self, f):
         # Initialization
