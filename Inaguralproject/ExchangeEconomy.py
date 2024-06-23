@@ -69,7 +69,7 @@ class ExchangeEconomyClass:
         # define the prices
         prices = np.linspace(0.5,2.5,75)
 
-        # deceide B's consumption
+        # decide B's consumption
         for p1 in prices:
             x1_B_star,x2_B_star = self.demand_B(p1)
 
