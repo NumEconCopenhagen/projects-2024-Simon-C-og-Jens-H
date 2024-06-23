@@ -61,7 +61,7 @@ params = {'table': 'idrtil01',
   {'code': 'Tid', 'values': ['*']}]}
 sport_api = ind.get_data(params=params)
 
-# We rename the variables and drop irrelevant one
+# We rename the variables and drop irrelevant ones
 sport_api.rename(columns={'INDHOLD':'avr_attend'}, inplace=True)
 sport_api.rename(columns={'TID':'year'}, inplace=True)
 sport_api.rename(columns={'SPORTS':'event'}, inplace=True)
