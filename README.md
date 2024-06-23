@@ -24,4 +24,4 @@ This project examines the Overlapping Generations (OLG) model, focusing on how b
 ## Exam Project
 The exam project encompasses three problems, which can be found in the folder /examproject.
 For the exam, the coding in the .py file is done with the assistance of ChatGPT. 
-Our notebook (.ipynb) is entirely made by us including text, interpretation, intuition and references to our .py file with the exception of the code in problem 1.3, which is generated using ChatGPT.
+Our notebook (.ipynb) is entirely made by us including text, interpretation, intuition and references to our .py file with the exception of the code in problem 1.3, which is generated using ChatGPT. This is also noted in the notebook to make readers aware of this
