@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 from scipy.optimize import root
 from scipy.optimize import minimize
-
+from scipy.optimize import minimize_scalar
 
 class problem1:
     def __init__(self, par):
@@ -88,6 +88,44 @@ class problem1:
         ell_j_star = (p_j * A * gamma / w) ** (1 / (1 - gamma))
         y_j_star = A * ell_j_star ** gamma
         return y_j_star
+    
+    def plot_market_clearing_p1(self, p1_vals, p2_eq):
+        market_clearing_results = []
+        for p1 in p1_vals:
+            market_clearing = self.market_clearing_conditions([p1, p2_eq])
+            market_clearing_results.append(market_clearing)
+
+        market_clearing_results = np.array(market_clearing_results)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(p1_vals, market_clearing_results[:, 0], label='Good 1 Market Clearing')
+        plt.plot(p1_vals, market_clearing_results[:, 1], label='Good 2 Market Clearing')
+        plt.axhline(0, color='black', linestyle='--')
+        plt.xlabel('$p_1$')
+        plt.ylabel('Market Clearing Condition')
+        plt.title('Market Clearing Conditions as a Function of $p_1$')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    
+    def plot_market_clearing_p2(self, p1_eq, p2_vals):
+        market_clearing_results = []
+        for p2 in p2_vals:
+            market_clearing = self.market_clearing_conditions([p1_eq, p2])
+            market_clearing_results.append(market_clearing)
+
+        market_clearing_results = np.array(market_clearing_results)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(p2_vals, market_clearing_results[:, 0], label='Good 1 Market Clearing')
+        plt.plot(p2_vals, market_clearing_results[:, 1], label='Good 2 Market Clearing')
+        plt.axhline(0, color='black', linestyle='--')
+        plt.xlabel('$p_2$')
+        plt.ylabel('Market Clearing Condition')
+        plt.title('Market Clearing Conditions as a Function of $p_2$')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     def social_welfare_function(self, tau, T):
         p1, p2 = self.find_equilibrium_prices()
@@ -271,7 +309,8 @@ class problem2:
                     'Initial Realized Utility': realized_utility,
                     'New Chosen Career': new_chosen_career,
                     'New Realized Utility': new_realized_utility,
-                    'Prior Expected Utility': prior_expected_utilities[chosen_career - 1]
+                    'Prior Expected Utility': prior_expected_utilities[chosen_career - 1],
+                    'Switched': chosen_career != new_chosen_career  # True if career was switched
                 })
 
         self.results_with_switching_df = pd.DataFrame(results_with_switching)
@@ -317,7 +356,18 @@ class problem2:
         plt.legend()
         plt.tight_layout()
         plt.show()
-        
+
+        # Share of Graduates Choosing to Switch Careers by Initial Career Choice
+        plt.figure(figsize=(10, 6))
+        switching_stats = self.results_with_switching_df.groupby('Initial Chosen Career')['Switched'].mean()
+        plt.bar(switching_stats.index, switching_stats.values, color='skyblue')
+        plt.title('Share of Graduates Choosing to Switch Careers by Initial Career Choice')
+        plt.xlabel('Initial Chosen Career')
+        plt.ylabel('Share of Graduates')
+        plt.xticks(range(1, self.J + 1))
+        plt.ylim(0, 1)  # Ensure y-axis limits are between 0 and 1 for share percentage
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()        
 
 class problem3:
     def __init__(self, X, y):
@@ -371,7 +421,7 @@ class problem3:
         A, B, C, D, y = self.A, self.B, self.C, self.D, self.y
         
         if any(p is None for p in [A, B, C, D]):
-            print("Could not find all points A, B, C, D.")
+            print("")
             return None, None
 
         # Compute the barycentric coordinates for triangle ABC
@@ -437,12 +487,10 @@ class problem3:
 
         if r1_ABC >= 0 and r2_ABC >= 0 and r3_ABC >= 0:
             approximation_ABC = r1_ABC * f(*A) + r2_ABC * f(*B) + r3_ABC * f(*C)
-            print(f"Point y is inside triangle ABC with barycentric coordinates ({r1_ABC:.3f}, {r2_ABC:.3f}, {r3_ABC:.3f})")
             print(f"Approximation of f(y): {approximation_ABC:.3f}")
             print(f"True value of f(y):    {fy_true:.3f}")
         elif r1_CDA >= 0 and r2_CDA >= 0 and r3_CDA >= 0:
             approximation_CDA = r1_CDA * f(*C) + r2_CDA * f(*D) + r3_CDA * f(*A)
-            print(f"Point y is inside triangle CDA with barycentric coordinates ({r1_CDA:.3f}, {r2_CDA:.3f}, {r3_CDA:.3f})")
             print(f"Approximation of f(y): {approximation_CDA:.3f}")
             print(f"True value of f(y):    {fy_true:.3f}")
         else:
@@ -477,6 +525,5 @@ class problem3:
         for result in results:
             y, f_y_true, f_y_approx = result
             print(f"Point y = {y}:")
-            print(f"  True value of f(y): {f_y_true:.2f}")
-            print(f"  Approximated value of f(y): {f_y_approx:.5f}")
-            print()
+            print(f"True value of f(y): {f_y_true:.2f}")
+            print(f"Approximated value of f(y): {f_y_approx:.5f}\n")
