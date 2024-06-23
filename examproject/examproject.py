@@ -158,7 +158,7 @@ class problem2:
     
     def simulate_2(self, seed=7):
         np.random.seed(seed)
-        results_with_switching = []
+        results = []
         
         for k in range(self.K):
             epsilon_friends = {i: np.random.normal(0, self.sigma, (i, self.J)) for i in range(1, self.N + 1)}
@@ -174,25 +174,15 @@ class problem2:
                 # Calculate the realized utility
                 realized_utility = self.v[chosen_career - 1] + epsilon_personal[i][chosen_career - 1]
                 
-                # After learning the realized utility, reconsider career choice
-                new_prior_expected_utilities = prior_expected_utilities - self.c
-                new_prior_expected_utilities[chosen_career - 1] = realized_utility
-                
-                new_chosen_career = np.argmax(new_prior_expected_utilities) + 1
-                new_realized_utility = self.v[new_chosen_career - 1] + epsilon_personal[i][new_chosen_career - 1]
-
-                results_with_switching.append({
+                results.append({
                     'Graduate': i,
-                    'Initial Chosen Career': chosen_career,
-                    'Initial Realized Utility': realized_utility,
-                    'New Chosen Career': new_chosen_career,
-                    'New Realized Utility': new_realized_utility,
+                    'Chosen Career': chosen_career,
                     'Prior Expected Utility': prior_expected_utilities[chosen_career - 1],
-                    'Switched': chosen_career != new_chosen_career  # True if career was switched
+                    'Realized Utility': realized_utility
                 })
         
-                self.results_with_switching_df = pd.DataFrame(results_with_switching)  
-
+        self.results_df = pd.DataFrame(results)
+    
     def calculate_statistics(self):
         if self.results_df is None or len(self.results_df) == 0:
             raise ValueError("Simulation results are empty. Please run simulate() first.")
@@ -211,10 +201,8 @@ class problem2:
         if self.results_df is None or len(self.results_df) == 0:
             raise ValueError("Simulation results are empty. Please run simulate() first.")
         
-        # Visualize the results
-        plt.figure(figsize=(12, 8))
-        
         # Share of Graduates Choosing Each Career
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 1)
         colors = ['red', 'green', 'blue']
         for idx, career in enumerate(range(1, self.J + 1)):
@@ -224,8 +212,11 @@ class problem2:
         plt.ylabel('Share')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
+        plt.tight_layout()
+        plt.show()
         
         # Average Subjective Expected Utility
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 2)
         plt.plot(self.average_subjective_expected_utility.index, self.average_subjective_expected_utility, label='Average Subjective Expected Utility', color='blue')
         plt.title('Average Subjective Expected Utility')
@@ -233,8 +224,11 @@ class problem2:
         plt.ylabel('Avg. Exp. Utility')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
+        plt.tight_layout()
+        plt.show()
         
         # Average Ex Post Realized Utility
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 3)
         plt.plot(self.average_ex_post_realized_utility.index, self.average_ex_post_realized_utility, label='Average Ex Post Realized Utility', color='blue')
         plt.title('Average Ex Post Realized Utility')
@@ -242,11 +236,11 @@ class problem2:
         plt.ylabel('Avg. Realized Utility')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
-        
         plt.tight_layout()
         plt.show()
+        
 
-    def simulate_and_switch(self, seed=7):
+    def simulate_3(self, seed=7):
         np.random.seed(seed)
         results_with_switching = []
 
@@ -285,10 +279,9 @@ class problem2:
     def visualize_results_with_switching(self):
         if self.results_with_switching_df is None or len(self.results_with_switching_df) == 0:
             raise ValueError("Simulation results with switching are empty. Please run simulate_and_switch() first.")
-        
-        plt.figure(figsize=(12, 8))
-        
+            
         # Share of Graduates Choosing Each Career after Switching
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 1)
         colors = ['red', 'green', 'blue']
         for idx, career in enumerate(range(1, self.J + 1)):
@@ -298,8 +291,11 @@ class problem2:
         plt.ylabel('Share')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
+        plt.tight_layout()
+        plt.show()
         
         # Average Subjective Expected Utility after Switching
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 2)
         plt.plot(self.average_subjective_expected_utility_switching.index, self.average_subjective_expected_utility_switching, label='Average Subjective Expected Utility', color='blue')
         plt.title('Average Subjective Expected Utility after Switching')
@@ -307,8 +303,11 @@ class problem2:
         plt.ylabel('Avg. Exp. Utility')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
+        plt.tight_layout()
+        plt.show()
         
         # Average Ex Post Realized Utility after Switching
+        plt.figure(figsize=(12, 12))
         plt.subplot(3, 1, 3)
         plt.plot(self.average_ex_post_realized_utility_switching.index, self.average_ex_post_realized_utility_switching, label='Average Ex Post Realized Utility', color='blue')
         plt.title('Average Ex Post Realized Utility after Switching')
@@ -316,27 +315,9 @@ class problem2:
         plt.ylabel('Avg. Realized Utility')
         plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
         plt.legend()
+        plt.tight_layout()
+        plt.show()
         
-        plt.tight_layout()
-        plt.show()
-
-    def plot_share_of_switching_careers(self,results_with_switching_df, N):
-        if results_with_switching_df is None or len(results_with_switching_df) == 0:
-            raise ValueError("Simulation results with switching are empty. Please provide valid data.")
-    
-        # Calculate share of graduates switching careers
-        share_graduates_switching_career = results_with_switching_df.groupby('Graduate')['Switched'].mean()
-    
-        # Visualize the share of graduates switching careers
-        plt.figure(figsize=(12, 6))
-        plt.plot(share_graduates_switching_career.index, share_graduates_switching_career, label='Share of Graduates Switching Career', color='purple')
-        plt.title('Share of Graduates Switching Career')
-        plt.xlabel('Graduate')
-        plt.ylabel('Share Switching')
-        plt.xticks(np.arange(1, N + 1))  # Ensure all graduates are displayed on x-axis
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
 
 class problem3:
     def __init__(self, X, y):
