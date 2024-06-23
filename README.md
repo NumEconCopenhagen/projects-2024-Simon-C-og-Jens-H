@@ -1,4 +1,4 @@
-# Simon og Jens
+# Simon C og Jens H
 
 Group members:
 1. Simon (zth948)
@@ -13,13 +13,16 @@ This repositary contains:
 ## Inaugural Project
 
 This project models an exchange economy to analyze market dynamics, utility optimization, and equilibrium conditions using the `ExchangeEconomyClass`. The accompanying notebook demonstrates the model with detailed analysis and visualizations.
+The coding in the .py file is done with the assistance of ChatGPT. 
 
 ## Data Project
 
 This project explores the sporting habits of adults in Denmark from 2014 to 2022, analyzing trends in sports participation and event attendance. The accompanying Python script and Jupyter notebook include data cleaning, merging, and analysis processes to uncover insights into the correlation between sports membership and event attendance.
+The coding in the .py file is done with the assistance of ChatGPT. 
 
 ## Model Project
 This project examines the Overlapping Generations (OLG) model, focusing on how both an imposed tax on income and changes in population growth affect capital accummulation. The notebook and py-file provide both analytical and numerical solutions, along with further analysis and visualizations to illustrate the model's dynamics.
+The coding in the .py file is done with the assistance of ChatGPT. 
 
 ## Exam Project
 The exam project encompasses three problems, which can be found in the folder /examproject.
