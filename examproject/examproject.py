@@ -115,6 +115,17 @@ class problem2:
         self.sigma = sigma
         self.v = v
         self.c = c
+
+        self.results_df = None
+        self.results_with_switching_df = None
+
+        self.share_graduates_choosing_career = None
+        self.average_subjective_expected_utility = None
+        self.average_ex_post_realized_utility = None
+
+        self.share_graduates_choosing_career_switching = None
+        self.average_subjective_expected_utility_switching = None
+        self.average_ex_post_realized_utility_switching = None
     
     def simulate(self):
         # Initialize arrays to store results
@@ -145,8 +156,187 @@ class problem2:
         
         return expected_utility, avg_realized_utility
     
-    
+    def simulate_2(self, seed=7):
+        np.random.seed(seed)
+        results_with_switching = []
+        
+        for k in range(self.K):
+            epsilon_friends = {i: np.random.normal(0, self.sigma, (i, self.J)) for i in range(1, self.N + 1)}
+            epsilon_personal = {i: np.random.normal(0, self.sigma, self.J) for i in range(1, self.N + 1)}
+            
+            for i in range(1, self.N + 1):
+                # Calculate prior expected utilities
+                prior_expected_utilities = self.v + np.mean(epsilon_friends[i], axis=0)
+                
+                # Determine the career choice with the highest expected utility
+                chosen_career = np.argmax(prior_expected_utilities) + 1
+                
+                # Calculate the realized utility
+                realized_utility = self.v[chosen_career - 1] + epsilon_personal[i][chosen_career - 1]
+                
+                # After learning the realized utility, reconsider career choice
+                new_prior_expected_utilities = prior_expected_utilities - self.c
+                new_prior_expected_utilities[chosen_career - 1] = realized_utility
+                
+                new_chosen_career = np.argmax(new_prior_expected_utilities) + 1
+                new_realized_utility = self.v[new_chosen_career - 1] + epsilon_personal[i][new_chosen_career - 1]
 
+                results_with_switching.append({
+                    'Graduate': i,
+                    'Initial Chosen Career': chosen_career,
+                    'Initial Realized Utility': realized_utility,
+                    'New Chosen Career': new_chosen_career,
+                    'New Realized Utility': new_realized_utility,
+                    'Prior Expected Utility': prior_expected_utilities[chosen_career - 1],
+                    'Switched': chosen_career != new_chosen_career  # True if career was switched
+                })
+        
+                self.results_with_switching_df = pd.DataFrame(results_with_switching)  
+
+    def calculate_statistics(self):
+        if self.results_df is None or len(self.results_df) == 0:
+            raise ValueError("Simulation results are empty. Please run simulate() first.")
+        
+        # Calculate the required statistics
+        self.share_graduates_choosing_career = self.results_df.groupby('Graduate')['Chosen Career'].value_counts(normalize=True).unstack(fill_value=0)
+        self.average_subjective_expected_utility = self.results_df.groupby('Graduate')['Prior Expected Utility'].mean()
+        self.average_ex_post_realized_utility = self.results_df.groupby('Graduate')['Realized Utility'].mean()
+
+        if self.results_with_switching_df is not None and len(self.results_with_switching_df) > 0:
+            self.share_graduates_choosing_career_switching = self.results_with_switching_df.groupby('Graduate')['New Chosen Career'].value_counts(normalize=True).unstack(fill_value=0)
+            self.average_subjective_expected_utility_switching = self.results_with_switching_df.groupby('Graduate')['Prior Expected Utility'].mean()
+            self.average_ex_post_realized_utility_switching = self.results_with_switching_df.groupby('Graduate')['New Realized Utility'].mean()
+    
+    def visualize_results(self):
+        if self.results_df is None or len(self.results_df) == 0:
+            raise ValueError("Simulation results are empty. Please run simulate() first.")
+        
+        # Visualize the results
+        plt.figure(figsize=(12, 8))
+        
+        # Share of Graduates Choosing Each Career
+        plt.subplot(3, 1, 1)
+        colors = ['red', 'green', 'blue']
+        for idx, career in enumerate(range(1, self.J + 1)):
+            plt.plot(self.share_graduates_choosing_career.index, self.share_graduates_choosing_career[career], label=f'Career {career}', color=colors[idx])
+        plt.title('Share of Graduates Choosing Each Career')
+        plt.xlabel('Graduate')
+        plt.ylabel('Share')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        # Average Subjective Expected Utility
+        plt.subplot(3, 1, 2)
+        plt.plot(self.average_subjective_expected_utility.index, self.average_subjective_expected_utility, label='Average Subjective Expected Utility', color='blue')
+        plt.title('Average Subjective Expected Utility')
+        plt.xlabel('Graduate')
+        plt.ylabel('Avg. Exp. Utility')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        # Average Ex Post Realized Utility
+        plt.subplot(3, 1, 3)
+        plt.plot(self.average_ex_post_realized_utility.index, self.average_ex_post_realized_utility, label='Average Ex Post Realized Utility', color='blue')
+        plt.title('Average Ex Post Realized Utility')
+        plt.xlabel('Graduate')
+        plt.ylabel('Avg. Realized Utility')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        plt.tight_layout()
+        plt.show()
+
+    def simulate_and_switch(self, seed=7):
+        np.random.seed(seed)
+        results_with_switching = []
+
+        for k in range(self.K):
+            epsilon_friends = {i: np.random.normal(0, self.sigma, (i, self.J)) for i in range(1, self.N + 1)}
+            epsilon_personal = {i: np.random.normal(0, self.sigma, self.J) for i in range(1, self.N + 1)}
+
+            for i in range(1, self.N + 1):
+                # Calculate prior expected utilities
+                prior_expected_utilities = self.v + np.mean(epsilon_friends[i], axis=0)
+                
+                # Determine the career choice with the highest expected utility
+                chosen_career = np.argmax(prior_expected_utilities) + 1
+                
+                # Calculate the realized utility
+                realized_utility = self.v[chosen_career - 1] + epsilon_personal[i][chosen_career - 1]
+                
+                # After learning the realized utility, reconsider career choice
+                new_prior_expected_utilities = prior_expected_utilities - self.c
+                new_prior_expected_utilities[chosen_career - 1] = realized_utility
+                
+                new_chosen_career = np.argmax(new_prior_expected_utilities) + 1
+                new_realized_utility = self.v[new_chosen_career - 1] + epsilon_personal[i][new_chosen_career - 1]
+                
+                results_with_switching.append({
+                    'Graduate': i,
+                    'Initial Chosen Career': chosen_career,
+                    'Initial Realized Utility': realized_utility,
+                    'New Chosen Career': new_chosen_career,
+                    'New Realized Utility': new_realized_utility,
+                    'Prior Expected Utility': prior_expected_utilities[chosen_career - 1]
+                })
+
+        self.results_with_switching_df = pd.DataFrame(results_with_switching)
+    
+    def visualize_results_with_switching(self):
+        if self.results_with_switching_df is None or len(self.results_with_switching_df) == 0:
+            raise ValueError("Simulation results with switching are empty. Please run simulate_and_switch() first.")
+        
+        plt.figure(figsize=(12, 8))
+        
+        # Share of Graduates Choosing Each Career after Switching
+        plt.subplot(3, 1, 1)
+        colors = ['red', 'green', 'blue']
+        for idx, career in enumerate(range(1, self.J + 1)):
+            plt.plot(self.share_graduates_choosing_career_switching.index, self.share_graduates_choosing_career_switching[career], label=f'Career {career}', color=colors[idx])
+        plt.title('Share of Graduates Choosing Each Career after Switching')
+        plt.xlabel('Graduate')
+        plt.ylabel('Share')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        # Average Subjective Expected Utility after Switching
+        plt.subplot(3, 1, 2)
+        plt.plot(self.average_subjective_expected_utility_switching.index, self.average_subjective_expected_utility_switching, label='Average Subjective Expected Utility', color='blue')
+        plt.title('Average Subjective Expected Utility after Switching')
+        plt.xlabel('Graduate')
+        plt.ylabel('Avg. Exp. Utility')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        # Average Ex Post Realized Utility after Switching
+        plt.subplot(3, 1, 3)
+        plt.plot(self.average_ex_post_realized_utility_switching.index, self.average_ex_post_realized_utility_switching, label='Average Ex Post Realized Utility', color='blue')
+        plt.title('Average Ex Post Realized Utility after Switching')
+        plt.xlabel('Graduate')
+        plt.ylabel('Avg. Realized Utility')
+        plt.xticks(np.arange(1, self.N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        
+        plt.tight_layout()
+        plt.show()
+
+    def plot_share_of_switching_careers(self,results_with_switching_df, N):
+        if results_with_switching_df is None or len(results_with_switching_df) == 0:
+            raise ValueError("Simulation results with switching are empty. Please provide valid data.")
+    
+        # Calculate share of graduates switching careers
+        share_graduates_switching_career = results_with_switching_df.groupby('Graduate')['Switched'].mean()
+    
+        # Visualize the share of graduates switching careers
+        plt.figure(figsize=(12, 6))
+        plt.plot(share_graduates_switching_career.index, share_graduates_switching_career, label='Share of Graduates Switching Career', color='purple')
+        plt.title('Share of Graduates Switching Career')
+        plt.xlabel('Graduate')
+        plt.ylabel('Share Switching')
+        plt.xticks(np.arange(1, N + 1))  # Ensure all graduates are displayed on x-axis
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
 
 class problem3:
     def __init__(self, X, y):
